@@ -2,6 +2,7 @@ import json
 import os
 import logging
 from pathlib import Path
+
 from langchain.document_loaders import JSONLoader
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
@@ -14,6 +15,7 @@ from langchain.chains.conversational_retrieval.prompts import CONDENSE_QUESTION_
 
 
 class ProductBot:
+
     def __init__(self, prod_name):
 
         self.api_key = os.getenv('OPENAI_API_KEY')
@@ -33,10 +35,13 @@ class ProductBot:
             text_content=False
         )
 
-        self.data = self.loader.load()
+        print(self.prod_name)
+        file_path = self.prod_name + '.json',
+        self.data = self.json_to_texts(file_path)
+
 
         embeddings = OpenAIEmbeddings()
-        self.vectorstore = Chroma.from_documents(self.data, embeddings)
+        self.vectorstore = Chroma.from_texts(self.data, embeddings)
         
         # define two LLM models from OpenAI
         self.llm = OpenAI(temperature=0.8)
@@ -80,7 +85,75 @@ class ProductBot:
 
         return response["answer"]
 
+    def dict_to_text(self, data_dict):
+        text = ""
+        product = data_dict['product']
+        for key, value in product.items():
+            if key == 'features':
+                text += f"Features: "
+                for i, feature in enumerate(value):
+                    if i != len(value) - 1:
+                        text += f"{feature['name']}: {feature['value']}; "
+                    else:
+                        text += f"{feature['name']}: {feature['value']}\n"
+            elif key == 'images':
+                continue  # skip the images field
+            elif key == 'collection':
+                continue  # skip the collection field
+            else:
+                text += f"'{key}': '{value}',\n"
+
+        fulfillment = data_dict['fulfillment']
+        for key, value in fulfillment.items():
+            if key == 'pickup_info':
+                continue  # skip the pickup_info field
+            elif key == 'ship_to_home_info':
+                continue  # skip the ship_to_home_info field
+            elif key == 'scheduled_delivery_info':
+                continue  # skip the scheduled_delivery_info field
+            else:
+                text += f"'{key}': {value},\n"
+
+        offers = data_dict['offers']['primary']
+        for key, value in offers.items():
+            if key in ['price', 'regular_price']:
+                text += f"'{key}': {offers['symbol']} {value},\n"
+            else:
+                continue  # skip other keys
+
+        return text
+
+    def json_to_texts(self, json_file):
+
+        # Open and load json file: FIX
+        with open('data/' + json_file[0], 'r') as f:
+            data = json.load(f)
+        
+        # Get request parameters and homedepot_url from request_metadata
+        request_params = data['request_parameters']
+        homedepot_url = data['request_metadata']['homedepot_url']
+        results_count = len(data['search_results'])
+        
+        # Generate the search metadata text
+        metadata_text = "search metadata:\n"
+        for key, value in request_params.items():
+            metadata_text += f' "{key}": "{value}",\n'
+        metadata_text += f' "homedepot_url": "{homedepot_url}"\n'
+        metadata_text += f' "search_results_count": {results_count}\n'
+        
+        # Process each product in search_results
+        result_texts = []
+        for product in data['search_results']:
+            print(type(product))
+            print(product)
+            text = self.dict_to_text(product)
+            # Append the metadata text at the beginning of the product text
+            text = metadata_text + text
+            result_texts.append(text)
+        
+        return result_texts
+
 
 if __name__ == "__main__":
-    chatbot = ChatBot('test.json')
+    chatbot = ChatBot('test')
     chatbot.predict("Can you tell me more about these products?")

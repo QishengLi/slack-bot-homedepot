@@ -65,7 +65,7 @@ def message_handler_chat(message, say, context, logger):
     # Need to fix this.
     if "{" in message['text']:
         # say("I'm hereeeeeee!")
-        ask_question(message['channel'])
+        ask_confirmation(message['channel'])
         return
 
     # Use chatGPT for other messages
@@ -78,7 +78,7 @@ def message_handler_chat(message, say, context, logger):
 
 
 # Send a message with buttons to the user
-def ask_question(channel):
+def ask_confirmation(channel):
 
     try:
         response = client.chat_postMessage(
@@ -117,7 +117,7 @@ def ask_question(channel):
                 )
         return response
     except SlackApiError as e:
-        print(f"Error sending message: {e.response['error']}")
+        print(f"Error sending message when asking for product confirmation: {e.response['error']}")
 
 
 # Handle user's response to the question
@@ -159,12 +159,59 @@ def send_api_request(body, say, context):
             # utils.save_json_response(api_result.json(), params['search_term'])
             if utils.check_success_from_json_file(params['search_term']):
                 say(messages.PRODUCT_RECEIVED)
+                show_product_examples(body['channel']['id'], params['search_term'])
                 utils.set_state("IS_PRODUCT_BOT", 1)
                 utils.set_state("curr_product", params['search_term'])
         else:
             say(messages.PRODUCT_ERROR)
     except Exception as e:
         say(f"An error occurred while sending API request: {str(e)}")
+
+def show_product_examples(channel, search_term):
+    """
+    A function that show a few examples from the search.
+    """
+
+    products = utils.get_products(search_term)
+
+    blocks = []
+
+    title_block = {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "Here are a few examples."
+                }
+            }
+
+    blocks.append(title_block)
+
+    for product in products:
+        block = {
+                "type": "section",
+                # "block_id": "product_detail",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"<{product['url']}|{product['title']}> \n *Price:* {product['price']} \n *Rating:* {product['rating']}"
+                },
+                "accessory": {
+                    "type": "image",
+                    "image_url": f"{product['image_url']}",
+                    "alt_text": f"{product['title']}"
+                }
+        }
+
+        blocks.append(block)
+
+    try:
+        response = client.chat_postMessage(
+            channel=channel,
+            text="Example products.",
+            blocks = blocks
+                )
+        return response
+    except SlackApiError as e:
+        print(f"Error sending message when sending example products: {e.response['error']}")    
 
 # Function to retrieve the last one or two messages
 def retrieve_last_messages(channel_id):
