@@ -186,13 +186,14 @@ def show_product_examples(channel, search_term):
 
     blocks.append(title_block)
 
+    # Show product examples.
     for product in products:
         block = {
                 "type": "section",
                 # "block_id": "product_detail",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"<{product['url']}|{product['title']}> \n *Price:* {product['price']} \n *Rating:* {product['rating']}"
+                    "text": f"<{product['url']}|{product['title']}> \n *Price:* ${product['price']} \n *Rating:* {product['rating']} ({product["ratings_total"]} total ratings)"
                 },
                 "accessory": {
                     "type": "image",
@@ -202,6 +203,8 @@ def show_product_examples(channel, search_term):
         }
 
         blocks.append(block)
+
+    #TODO: Show more examples or ask specific questions.
 
     try:
         response = client.chat_postMessage(

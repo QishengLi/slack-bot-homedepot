@@ -65,6 +65,7 @@ def get_products(search_term, num = 4):
                 'url': product_info.get('link'),
                 'image_url': product_info.get('primary_image'),
                 'rating': product_info.get('rating'),
+                'ratings_total': product_info.get('ratings_total')
                 'price': result.get('offers', {}).get('primary', {}).get('price')
             }
             products.append(product)
