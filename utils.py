@@ -55,20 +55,24 @@ def get_products(search_term, num = 4):
             
         search_results = data.get('search_results', [])
 
-        min_num = min(num, len(search_results))
+        curr_index = get_state("example_index")
+        next_index = curr_index + num
+        min_num = min(next_index, len(search_results))
 
         products = []
-        for result in search_results[:min_num]:
+        for result in search_results[curr_index:min_num]:
             product_info = result.get('product', {})
             product = {
                 'title': product_info.get('title'),
                 'url': product_info.get('link'),
                 'image_url': product_info.get('primary_image'),
                 'rating': product_info.get('rating'),
-                'ratings_total': product_info.get('ratings_total')
+                'ratings_total': product_info.get('ratings_total'),
                 'price': result.get('offers', {}).get('primary', {}).get('price')
             }
             products.append(product)
+
+        set_state("example_index", next_index)
 
         return products
     

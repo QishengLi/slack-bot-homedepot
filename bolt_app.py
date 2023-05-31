@@ -89,7 +89,7 @@ def ask_confirmation(channel):
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "Does it look correct?"
+                    "text": "Just to double check, does it look correct?"
                 }
             },
             {
@@ -153,15 +153,17 @@ def send_api_request(body, say, context):
             print(input_string)
             
             params = bigboxParams.construct_params(input_string)
-            # # make the http GET request to the BigBox API
-            # api_result = requests.get('https://api.bigboxapi.com/request', params)
+            # make the http GET request to the BigBox API
+            api_result = requests.get('https://api.bigboxapi.com/request', params)
             # save the JSON response to a local file using the save_json_response function from the utils file
-            # utils.save_json_response(api_result.json(), params['search_term'])
+            utils.save_json_response(api_result.json(), params['search_term'])
             if utils.check_success_from_json_file(params['search_term']):
                 say(messages.PRODUCT_RECEIVED)
+                utils.set_state("example_index", 0)
                 show_product_examples(body['channel']['id'], params['search_term'])
                 utils.set_state("IS_PRODUCT_BOT", 1)
                 utils.set_state("curr_product", params['search_term'])
+                
         else:
             say(messages.PRODUCT_ERROR)
     except Exception as e:
@@ -193,7 +195,7 @@ def show_product_examples(channel, search_term):
                 # "block_id": "product_detail",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"<{product['url']}|{product['title']}> \n *Price:* ${product['price']} \n *Rating:* {product['rating']} ({product["ratings_total"]} total ratings)"
+                    "text": f"<{product['url']}|{product['title']}> \n *Price:* ${product['price']} \n *Rating:* {product['rating']} ({product['ratings_total']} total ratings)"
                 },
                 "accessory": {
                     "type": "image",
@@ -204,7 +206,36 @@ def show_product_examples(channel, search_term):
 
         blocks.append(block)
 
-    #TODO: Show more examples or ask specific questions.
+    # Show more examples or ask specific questions.
+        more_example_text = {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "Want more examples?"
+            }
+        }
+        more_example_choices = {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text", "text": "Yes, please!"},
+                    "style": "primary",
+                    "value": search_term,
+                    "action_id": "confirm_more_example",
+                },
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "No, thanks."},
+                    "style": "primary",
+                    "value": "no",
+                    "action_id": "no_more_example",
+                }
+            ]
+        }
+
+        blocks.extend([more_example_text, more_example_choices])
 
     try:
         response = client.chat_postMessage(
@@ -215,6 +246,73 @@ def show_product_examples(channel, search_term):
         return response
     except SlackApiError as e:
         print(f"Error sending message when sending example products: {e.response['error']}")    
+
+# Handle user's response to more examples.
+@app.action("no_more_example")
+def handle_cancel_action(ack, body, say):
+    # Acknowledge the button click event
+    ack()
+    
+    # Process the user's cancellation
+    print("No more examples.")
+    say(messages.NO_MORE_EXAMPLES)
+
+@app.action("confirm_more_example")
+def handle_confirm_action(ack, body, say, context):
+    # Acknowledge the button click event
+    ack()
+
+    show_more_examples(body['channel']['id'], body['actions'][0]['value'])
+    say(messages.SHOWED_MORE_EXAMPLES)
+
+    # Process the user's confirmation
+    print("Want more examples.")
+
+def show_more_examples(channel, search_term):
+
+    # TODO: add a state variable to track product examples.
+    products = utils.get_products(search_term)
+
+    blocks = []
+
+    title_block = {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "Here are more products for you to choose from."
+                }
+            }
+
+    blocks.append(title_block)
+
+    # Show product examples.
+    for product in products:
+        block = {
+                "type": "section",
+                # "block_id": "product_detail",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"<{product['url']}|{product['title']}> \n *Price:* ${product['price']} \n *Rating:* {product['rating']} ({product['ratings_total']} total ratings)"
+                },
+                "accessory": {
+                    "type": "image",
+                    "image_url": f"{product['image_url']}",
+                    "alt_text": f"{product['title']}"
+                }
+        }
+
+        blocks.append(block)
+
+    try:
+        response = client.chat_postMessage(
+            channel=channel,
+            text="Example products.",
+            blocks = blocks
+                )
+        return response
+    except SlackApiError as e:
+        print(f"Error sending message when sending example products: {e.response['error']}")    
+
 
 # Function to retrieve the last one or two messages
 def retrieve_last_messages(channel_id):
