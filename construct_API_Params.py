@@ -18,6 +18,7 @@ class BigboxParams:
         }
 
     def construct_params(self, input_string):
+        input_string = input_string.replace("“", '"').replace("”", '"')
         print(input_string)
         input_data = json.loads(input_string)
         
@@ -26,7 +27,6 @@ class BigboxParams:
 
         # Optional parameters
         self.params['max_price'] = input_data.get('max_price')
-        self.params['min_price'] = input_data.get('min_price')
         self.params['sort_by'] = input_data.get('sort_by')
 
         return self.params
