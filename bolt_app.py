@@ -41,9 +41,8 @@ paramBot = ParamBot()
 def welcome_message(event, say):
     # say(messages.WELCOME_MESSAGE.format(user=event['user']), channel=event['channel'])
     channel = event["channel"]
+    print(channel)
     welcome_blocks = [
-        {
-        "blocks": [
             {
                 "type": "section",
                 "text": {
@@ -52,7 +51,6 @@ def welcome_message(event, say):
                 }
             }
         ]
-    }]
 
     try:
         response = client.chat_postMessage(
