@@ -39,7 +39,30 @@ paramBot = ParamBot()
 
 @app.event("member_joined_channel")
 def welcome_message(event, say):
-    say(messages.WELCOME_MESSAGE.format(user=event['user']), channel=event['channel'])
+    # say(messages.WELCOME_MESSAGE.format(user=event['user']), channel=event['channel'])
+    channel = event["channel"]
+    welcome_blocks = [
+        {
+        "blocks": [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "Welcome! :ghost: I'm a shopping assistant that will try my best to help you find what you need at Home Depot. \n\n :book: *Instructions* \n 1. Always mention me (@MentionBot) to start a new query. I will guide you through constructing a search query on the products you are insterested in*.  \n 2. I will then show what I find about the products of your interests, and I can answer any questions that you might have. \n\n *I'm still learning, and I might make mistakes. :robot_face: So here is the shortcut -- if you send me a message in JSON format as following, I will be gathering all relevant information. \n {\n \"search_term\": \"some product\", \n \"max_price\": \"100\", \n \"sort_by\": \"best_seller\" \n} \n where _*sort_by*_ can be one of \"_best_seller_\", \"_most_popular_\", \"_price_high_to_low_\", \"_price_low_to_high_\", \"_highest_rating_\", and _*max_price*_ indicates the maximum budget you have for the product."
+                }
+            }
+        ]
+    }]
+
+    try:
+        response = client.chat_postMessage(
+            channel=channel,
+            text="a welcome message.",
+            blocks = welcome_blocks
+                )
+        return response
+    except SlackApiError as e:
+        print(f"Error sending message when sending a welcome message: {e.response['error']}")
 
 @app.event("app_mention")
 def event_test(event, say, context):

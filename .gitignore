@@ -1,0 +1,5 @@
+.DS_Store
+.ipynb_checkpoints/
+Experiment.ipynb
+__pycache__/
+data/
