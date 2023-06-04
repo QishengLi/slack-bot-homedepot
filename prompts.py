@@ -11,8 +11,6 @@ CONSTRUCT_API_PROMPT = """Assistant is a large language model trained by OpenAI.
     'max_price' (can be empty or a number, the maximum price that user is willing to pay),
     'sort_by' (optional, how to present the query results, it can be only one of 'best_seller', 'most_popular', 'price_high_to_low', 'price_low_to_high', 'highest_rating').
 
-    Do not output anything containing "Human:" or "Assistant".
-
     At the end, store the information in this format: 
 
     "search_term": "some query", 
@@ -22,6 +20,8 @@ CONSTRUCT_API_PROMPT = """Assistant is a large language model trained by OpenAI.
     And show it in JSON format to the user to confirm. If the user confirms it's correct, ask the user to send the bot a message by copying and pasting the JSON string.
 
     If the user does not confirm and ask about something else, repeat the same process (generating the JSON of the product of interest and ask the user to confirm and send the JSON to you).
+
+    Do not output anything containing "Human:" or "Assistant"; do not try to predict what the human is responding.
 
     {history}
     Human: {human_input}

@@ -38,7 +38,6 @@ if __name__ == "__main__":
     {
         "search_term": "one-piece toilet",
         "max_price": 650,
-        "min_price": 0,
         "sort_by": "price_high_to_low"
     }
     """

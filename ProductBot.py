@@ -29,12 +29,6 @@ class ProductBot:
         logger.addHandler(stream_handler)
         
         self.prod_name = prod_name
-        self.loader = JSONLoader(
-            file_path=self.prod_name + '.json',
-            jq_schema='.search_results[]',
-            text_content=False
-        )
-
         print(self.prod_name)
         file_path = self.prod_name + '.json',
         self.data = self.json_to_texts(file_path)
