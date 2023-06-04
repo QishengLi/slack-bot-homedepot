@@ -65,13 +65,11 @@ def welcome_message(event, say):
 @app.event("app_mention")
 def event_test(event, say, context):
 
-    timestamp = event.get("event_ts")
-
-    START = timestamp
-
+    bot_id = f"<@U058G072QDU>"
     utils.set_state("IS_PRODUCT_BOT", 0)
 
-    if not utils.get_state("IS_PRODUCT_BOT", 0): 
+    # Ignore messages that have extra text
+    if event['text'].strip() == bot_id:
         say(messages.MENTION_MESSAGE)
 
 
@@ -80,12 +78,14 @@ def message_handler_chat(message, say, context, logger):
 
     print(utils.get_state('IS_PRODUCT_BOT'))
 
-    if f"<@U058G072QDU>" in message['text']:
+    bot_id = f"<@U058G072QDU>"
+
+    # FIX: What if the user asks a question.
+    if message['text'].strip() == bot_id:
         return
 
     # Need to fix this.
     if "{" in message['text']:
-        # say("I'm hereeeeeee!")
         ask_confirmation(message['channel'])
         return
 
@@ -291,7 +291,7 @@ def handle_confirm_action(ack, body, say, context):
 
 def show_more_examples(channel, search_term):
 
-    # TODO: add a state variable to track product examples.
+    # Add a state variable to track product examples.
     products = utils.get_products(search_term)
 
     blocks = []
