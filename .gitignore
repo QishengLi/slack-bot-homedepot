@@ -3,3 +3,5 @@
 Experiment.ipynb
 __pycache__/
 data/
+state.json
+
