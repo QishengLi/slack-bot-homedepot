@@ -67,6 +67,7 @@ def event_test(event, say, context):
 
     bot_id = f"<@U058G072QDU>"
     utils.set_state("IS_PRODUCT_BOT", 0)
+    print("Set IS_PRODUCT_BOT == 0")
 
     # Ignore messages that have extra text
     if event['text'].strip() == bot_id:
@@ -76,11 +77,11 @@ def event_test(event, say, context):
 @app.message(".*")
 def message_handler_chat(message, say, context, logger):
 
-    print(utils.get_state('IS_PRODUCT_BOT'))
-
     bot_id = f"<@U058G072QDU>"
 
-    # FIX: What if the user asks a question.
+    if bot_id in message['text']:
+        utils.set_state("IS_PRODUCT_BOT", 0)
+
     if message['text'].strip() == bot_id:
         return
 
@@ -88,6 +89,8 @@ def message_handler_chat(message, say, context, logger):
     if "{" in message['text']:
         ask_confirmation(message['channel'])
         return
+
+    print(utils.get_state('IS_PRODUCT_BOT'))
 
     # Use chatGPT for other messages
     if not utils.get_state("IS_PRODUCT_BOT"):
@@ -199,35 +202,46 @@ def show_product_examples(channel, search_term):
 
     blocks = []
 
-    title_block = {
+    if products == []:
+        title_block = {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "Here are a few examples."
+                    "text": "Sorry, I couldn't find any products with this search query. Please try again."
                 }
             }
+        blocks.append(title_block)
 
-    blocks.append(title_block)
-
-    # Show product examples.
-    for product in products:
-        block = {
-                "type": "section",
-                # "block_id": "product_detail",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"<{product['url']}|{product['title']}> \n *Price:* ${product['price']} \n *Rating:* {product['rating']} ({product['ratings_total']} total ratings)"
-                },
-                "accessory": {
-                    "type": "image",
-                    "image_url": f"{product['image_url']}",
-                    "alt_text": f"{product['title']}"
+    else:  
+        title_block = {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "Here are a few examples."
+                    }
                 }
-        }
 
-        blocks.append(block)
+        blocks.append(title_block)
 
-    # Show more examples or ask specific questions.
+        # Show product examples.
+        for product in products:
+            block = {
+                    "type": "section",
+                    # "block_id": "product_detail",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"<{product['url']}|{product['title']}> \n *Price:* ${product['price']} \n *Rating:* {product['rating']} ({product['ratings_total']} total ratings)"
+                    },
+                    "accessory": {
+                        "type": "image",
+                        "image_url": f"{product['image_url']}",
+                        "alt_text": f"{product['title']}"
+                    }
+            }
+
+            blocks.append(block)
+
+        # Show more examples or ask specific questions.
         more_example_text = {
             "type": "section",
             "text": {
